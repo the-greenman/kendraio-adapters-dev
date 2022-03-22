@@ -1,0 +1,32 @@
+{
+  "name": "kendraio-adapter",
+  "version": "0.3.0",
+  "description": "Kendraio Adapter repository",
+  "scripts": {
+    "build": "ts-node build.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kendraio/kendraio-adapter.git"
+  },
+  "author": "Kendraio Developers",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kendraio/kendraio-adapter/issues"
+  },
+  "homepage": "https://github.com/kendraio/kendraio-adapter#readme",
+  "devDependencies": {
+    "@types/archiver": "^3.0.0",
+    "@types/lodash": "^4.14.141",
+    "@types/node": "^12.7.8",
+    "@types/rimraf": "^2.0.2",
+    "@types/yaml": "^1.2.0",
+    "archiver": "^3.1.1",
+    "handlebars": "^4.7.6",
+    "lodash": "^4.17.15",
+    "rimraf": "^3.0.0",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.6.3",
+    "yaml": "^1.7.2"
+  }
+}

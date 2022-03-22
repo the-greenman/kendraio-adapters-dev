@@ -1,0 +1,59 @@
+{
+  "adapterName": "github",
+  "label": "Github",
+  "description": null,
+  "infoUrl": null,
+  "supportUrl": null,
+  "maintainer": null,
+  "tags": [],
+  "version": "0.0.0",
+  "name": "github",
+  "modified": true,
+  "workflow": [
+    {
+      "workflowId": "myWorkflow",
+      "title": "Github Authentication",
+      "adapterName": "github",
+      "modified": false,
+      "config": "configs/myWorkflow.json"
+    },
+    {
+      "adapterName": "github",
+      "workflowId": "githubAuth",
+      "title": "Github Authentication",
+      "modified": true,
+      "config": "configs/githubAuth.json"
+    },
+    {
+      "adapterName": "github",
+      "workflowId": "githubUser",
+      "title": "Github Authentication",
+      "modified": true,
+      "config": "configs/githubUser.json"
+    },
+    {
+      "adapterName": "github",
+      "workflowId": "githubRepoIssues",
+      "title": "Github Repository Issues",
+      "modified": true,
+      "config": "configs/githubRepoIssues.json"
+    },
+    {
+      "adapterName": "github",
+      "workflowId": "githubRepoList",
+      "title": "Github Repository Issues",
+      "modified": true,
+      "config": "configs/githubRepoList.json"
+    },
+    {
+      "workflowId": "createCommit",
+      "title": "Create commit",
+      "adapterName": "github",
+      "modified": true,
+      "config": "configs/createCommit.json"
+    }
+  ],
+  "database": [],
+  "forms": [],
+  "attachments": {}
+}
