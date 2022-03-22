@@ -92,15 +92,8 @@ async function run() {
   });
 
   adapterList.forEach(({ location, name }) => {
-    const data = readFileSync(`${ location }/kendraio-adapter.json`, 'utf-8');
-    const attachments =
-      flatten(readdirSync(location, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirname => readdirSync(`${location}/${dirname.name}`).map(subDir => `${dirname.name}/${subDir}`))
-      ).reduce((acc, key) => {
-        acc[key] = JSON.parse(readFileSync(`${location}/${key}`, 'utf-8'));
-        return acc;
-      }, {});
+    let data = readFileSync(`${ location }/kendraio-adapter.json`, 'utf-8');
+    let attachments = get(JSON.parse(data), 'attachments', []);      
     writeFileSync(`${ __dirname }/public/${name}.json`, JSON.stringify({ ...JSON.parse(data), attachments }, null, 2));
   });
 }
