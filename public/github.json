@@ -6,7 +6,7 @@
   "supportUrl": null,
   "maintainer": null,
   "tags": [],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "name": "github",
   "modified": true,
   "workflow": [
@@ -51,6 +51,13 @@
       "adapterName": "github",
       "modified": true,
       "config": "configs/createCommit.json"
+    },
+    {
+      "adapterName": "github",
+      "workflowId": "loadGithubUserData",
+      "title": "Load github data into state",
+      "modified": true,
+      "config": "configs/loadGithubUserData.json"
     }
   ],
   "database": [],
@@ -60,7 +67,8 @@
       "workflowId": "myWorkflow",
       "title": "Github Authentication",
       "adapterName": "github",
-      "blocks": []
+      "blocks": [],
+      "modified": false
     },
     "configs/githubAuth.json": {
       "workflowId": "githubAuth",
@@ -103,7 +111,7 @@
           "name": "github.token"
         }
       ],
-      "modified": true
+      "modified": false
     },
     "configs/githubUser.json": {
       "workflowId": "githubUser",
@@ -114,44 +122,21 @@
           "type": "init"
         },
         {
-          "type": "variable-get",
-          "name": "github.token"
-        },
-        {
-          "type": "context-save",
-          "contextKey": "github.token"
-        },
-        {
-          "type": "graphql",
-          "endpoint": "https://api.github.com/graphql",
-          "query": "query MyQuery {\r\n    viewer { \r\n        login \r\n        }\r\n}",
-          "variables": {
-            "token": "context.github.token"
-          },
-          "headers": {
-            "Authorization": "join(' ', [`Bearer`, context.github.token])"
-          },
-          "allowFirst": true,
-          "allowEmpty": true
-        },
-        {
-          "type": "mapping",
-          "mapping": "data.data.viewer.login"
-        },
-        {
-          "type": "context-save",
-          "contextKey": "github.viewer"
+          "type": "gosub",
+          "adapterName": "github",
+          "workflowId": "loadGithubUserData",
+          "blockComment": "load github data"
         },
         {
           "type": "switch",
-          "valueGetter": "type(context.github.viewer) == `string` && length(context.github.viewer) > `0` && context.github.viewer != `clear`",
+          "valueGetter": "type(state.flags.github.viewer) == `string` && length(context.github.viewer) > `0` && state.flags.github.viewer != `clear`",
           "cases": [
             {
               "value": true,
               "blocks": [
                 {
                   "type": "template",
-                  "template": "Connected to Github as: {{context.github.viewer}}"
+                  "template": "Connected to Github as: {{state.flags.github.viewer}}"
                 }
               ]
             },
@@ -165,7 +150,16 @@
                 }
               ]
             }
-          ]
+          ],
+          "blockComment": "Request auth if no data exists"
+        },
+        {
+          "type": "debug",
+          "open": 1,
+          "showData": true,
+          "showContext": false,
+          "showState": true,
+          "blockComment": ""
         }
       ],
       "modified": true
@@ -250,7 +244,7 @@
           }
         }
       ],
-      "modified": true
+      "modified": false
     },
     "configs/githubRepoList.json": {
       "workflowId": "githubRepoList",
@@ -314,7 +308,7 @@
           "contextKey": "github.repositories"
         }
       ],
-      "modified": true
+      "modified": false
     },
     "configs/createCommit.json": {
       "workflowId": "createCommit",
@@ -325,39 +319,35 @@
           "type": "init"
         },
         {
-          "type": "variable-get",
-          "name": "github.token",
-          "blockComment": "Load github token"
+          "type": "mapping",
+          "mapping": "{\r\n    owner:`the-greenman`,\r\n    repository:`kendraio-test`,\r\n    branch:`main`\r\n}",
+          "blockComment": "Set up repository data"
         },
         {
           "type": "context-save",
-          "key": "github.token",
-          "blockComment": "Save github token"
+          "key": "github.adapterCommit",
+          "blockComment": "save repository for adapters to context"
         },
         {
-          "type": "debug",
-          "open": 1,
-          "showData": true,
-          "showContext": false,
-          "showState": false
+          "type": "gosub",
+          "adapterName": "github",
+          "workflowId": "loadGithubUserData",
+          "blockComment": "load github data"
         },
         {
           "type": "graphql",
           "endpoint": "https://api.github.com/graphql",
-          "query": "{\r\n  repository(owner: \"the-greenman\", name: \"kendraio-test\") {\r\n    ... on Repository{\r\n    defaultBranchRef{\r\n        target{\r\n            ... on Commit{\r\n                history(first:1){\r\n                    edges{\r\n                        node{\r\n                            ... on Commit{\r\n                                oid\r\n                            }\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }\r\n}\r\n  }\r\n}\r\n      ",
+          "query": " \r\nquery MyQuery($owner:String!, $name:String!, $branch:String!){\r\n        repository(owner: $owner, name: $name) {\r\n          ... on Repository{\r\n            ref(qualifiedName: $branch) {\r\n                       target {\r\n                         ... on Commit {\r\n                           oid\r\n                           committedDate\r\n                message\r\n                         }\r\n                       }\r\n                     }      \r\n                }\r\n          }\r\n        }",
           "variables": {
-            "token": "context.authToken"
+            "owner": "`the-greenman`",
+            "name": "`kendraio-test`",
+            "branch": "`main`"
           },
           "headers": {
-            "Authorization": "join(' ', [`Bearer`, context.github.token])"
+            "Authorization": "join(' ', [`Bearer`, state.flags.github.token])"
           },
           "allowFirst": true,
           "allowEmpty": true
-        },
-        {
-          "type": "mapping",
-          "mapping": "data.data.repository.defaultBranchRef.target.history.edges[0].node.oid",
-          "blockComment": "Extract last oid from result"
         },
         {
           "type": "debug",
@@ -368,38 +358,176 @@
           "blockComment": ""
         },
         {
+          "type": "mapping",
+          "mapping": "data.data.repository.ref.target",
+          "blockComment": "Extract content from result"
+        },
+        {
           "type": "context-save",
-          "key": "github.lastOid",
-          "blockComment": "save last Oid"
+          "key": "github.lastCommit",
+          "blockComment": "save last commit data"
+        },
+        {
+          "type": "adapter-info",
+          "adapterName": "github",
+          "compileAdapter": true,
+          "blockComment": "load adapter data"
+        },
+        {
+          "type": "template",
+          "template": "<h2>Preparing to commit adapter: {{data.adapterName}}</h2><p>Connected to github as: {{state.flags.github.viewer}}</p><p><strong>Repository: {{context.github.adapterCommit.owner}}/{{context.github.adapterCommit.repository}}/{{context.github.adapterCommit.branch}}</strong></p>",
+          "blockComment": "Adapter commit data"
+        },
+        {
+          "type": "form",
+          "jsonSchema": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "title": "Adapter label",
+                "default": ""
+              },
+              "description": {
+                "type": "string",
+                "title": "Description",
+                "default": ""
+              },
+              "version": {
+                "type": "string",
+                "title": "version",
+                "default": "0.0.0"
+              },
+              "commitMessage": {
+                "type": "string",
+                "title": "version",
+                "default": "Updated via kendraio flow"
+              }
+            }
+          },
+          "uiSchema": {},
+          "blockComment": ""
+        },
+        {
+          "type": "template",
+          "template": "<h3>Workflows</h3><ul>{{#each data.workflow}}<li>{{workflowId}}: {{title}}</li>{{/each}}</ul>",
+          "blockComment": "Workflow list"
+        },
+        {
+          "type": "context-save",
+          "key": "adapter",
+          "blockComment": "Save to context.adapter"
         },
         {
           "type": "mapping",
-          "mapping": "{\r\n  \"input\": {\r\n    \"branch\": {\r\n      \"repositoryNameWithOwner\": `the-greenman/kendraio-test`,\r\n      \"branchName\": `main`\r\n    },\r\n    \"message\": {\r\n      \"headline\": `Hello from GraphQL!`\r\n    },\r\n    \"fileChanges\": {\r\n      \"additions\": [\r\n        {\r\n          \"path\": `GraphQL.md`,\r\n          \"contents\": btoa(`this is one`)\r\n        }\r\n      ]\r\n    },\r\n    \"expectedHeadOid\": context.github.lastOid\r\n  }\r\n}",
-          "blockComment": "Set up input data"
+          "mapping": "btoa(json(data))",
+          "blockComment": "base64 encode"
         },
         {
-          "type": "graphql",
-          "endpoint": "https://api.github.com/graphql",
-          "query": "mutation MyQuery($input: CreateCommitOnBranchInput!) \r\n{ \r\n    createCommitOnBranch(input: $input) { \r\n        commit { \r\n          url \r\n        } \r\n    } \r\n    \r\n}",
-          "variables": {
-            "input": "data.input",
-            "token": "context.github.token"
-          },
-          "headers": {
-            "Authorization": "join(' ', [`Bearer`, context.github.token])"
-          },
-          "allowFirst": true,
-          "allowEmpty": true
+          "type": "context-save",
+          "key": "content",
+          "blockComment": "Save encoded content"
+        },
+        {
+          "type": "mapping",
+          "mapping": "{\r\n  \"input\": {\r\n    \"branch\": {\r\n      \"repositoryNameWithOwner\": join(`/`,[context.github.adapterCommit.owner,context.github.adapterCommit.repository]),\r\n      \"branchName\": context.github.adapterCommit.branch\r\n    },\r\n    \"message\": {\r\n      \"headline\": context.adapter.commitMessage\r\n    },\r\n    \"fileChanges\": {\r\n      \"additions\": [\r\n        {\r\n          \"path\": join(`/`,[`adapters`,context.adapter.adapterName,`kendraio-adapter.json`]),\r\n          \"contents\": context.content\r\n        }\r\n      ]\r\n    },\r\n    \"expectedHeadOid\": context.github.lastCommit.oid\r\n  }\r\n}",
+          "blockComment": "Set up input data"
         },
         {
           "type": "debug",
           "open": 1,
           "showData": true,
           "showContext": false,
-          "showState": false
+          "showState": true,
+          "blockComment": ""
+        },
+        {
+          "type": "actions",
+          "buttons": [
+            {
+              "label": "Commit to github",
+              "color": "primary",
+              "blocks": [
+                {
+                  "type": "graphql",
+                  "endpoint": "https://api.github.com/graphql",
+                  "query": "mutation MyQuery($input: CreateCommitOnBranchInput!){ createCommitOnBranch(input: $input) { commit { url  } } }",
+                  "variables": {
+                    "input": "data.input"
+                  },
+                  "headers": {
+                    "Authorization": "join(' ', [`Bearer`, state.flags.github.token])"
+                  }
+                },
+                {
+                  "type": "context-save",
+                  "key": "state.local.commitResult"
+                }
+              ],
+              "enabled": true
+            }
+          ],
+          "blockComment": ""
+        },
+        {
+          "type": "debug",
+          "open": 1,
+          "showData": true,
+          "showContext": false,
+          "showState": true,
+          "blockComment": ""
+        }
+      ],
+      "modified": true
+    },
+    "configs/loadGithubUserData.json": {
+      "workflowId": "loadGithubUserData",
+      "title": "Load github data into state",
+      "adapterName": "github",
+      "blocks": [
+        {
+          "type": "init"
+        },
+        {
+          "type": "variable-get",
+          "name": "github.token"
+        },
+        {
+          "type": "context-save",
+          "contextKey": "state.flags.github.token",
+          "blockComment": ""
+        },
+        {
+          "type": "debug",
+          "open": 1,
+          "showData": true,
+          "showContext": false,
+          "showState": true,
+          "blockComment": ""
+        },
+        {
+          "type": "graphql",
+          "endpoint": "https://api.github.com/graphql",
+          "query": "query MyQuery {\r\n    viewer { \r\n        login \r\n        }\r\n}",
+          "variables": {},
+          "headers": {
+            "Authorization": "join(' ', [`Bearer`, state.flags.github.token])"
+          },
+          "allowFirst": true,
+          "allowEmpty": true
+        },
+        {
+          "type": "mapping",
+          "mapping": "data.data.viewer.login"
+        },
+        {
+          "type": "context-save",
+          "contextKey": "state.flags.github.viewer",
+          "blockComment": ""
         }
       ],
       "modified": true
     }
-  }
+  },
+  "commitMessage": "Now committing to github"
 }
