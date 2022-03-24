@@ -1,12 +1,12 @@
 {
   "adapterName": "github",
   "label": "Github",
-  "description": null,
+  "description": "Github adapter for adapter development",
   "infoUrl": null,
   "supportUrl": null,
   "maintainer": null,
   "tags": [],
-  "version": "0.0.2",
+  "version": "0.0.3",
   "name": "github",
   "modified": true,
   "workflow": [
@@ -62,6 +62,7 @@
   ],
   "database": [],
   "forms": [],
+  "commitMessage": "Fixed the user data store",
   "attachments": {
     "configs/myWorkflow.json": {
       "workflowId": "myWorkflow",
@@ -129,7 +130,7 @@
         },
         {
           "type": "switch",
-          "valueGetter": "type(state.flags.github.viewer) == `string` && length(context.github.viewer) > `0` && state.flags.github.viewer != `clear`",
+          "valueGetter": "type(state.flags.github.viewer) == `string` && length(state.flags.github.viewer) > `0` && state.flags.github.viewer != `clear`",
           "cases": [
             {
               "value": true,
@@ -152,14 +153,6 @@
             }
           ],
           "blockComment": "Request auth if no data exists"
-        },
-        {
-          "type": "debug",
-          "open": 1,
-          "showData": true,
-          "showContext": false,
-          "showState": true,
-          "blockComment": ""
         }
       ],
       "modified": true
@@ -478,7 +471,7 @@
           "blockComment": ""
         }
       ],
-      "modified": true
+      "modified": false
     },
     "configs/loadGithubUserData.json": {
       "workflowId": "loadGithubUserData",
@@ -526,8 +519,7 @@
           "blockComment": ""
         }
       ],
-      "modified": true
+      "modified": false
     }
-  },
-  "commitMessage": "Now committing to github"
+  }
 }
