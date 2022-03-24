@@ -1,1 +1,1 @@
-{"name":"Test Kendraio Adapter Repository","adapters":[{"name":"github","version":"0.0.1","label":"Github","description":null,"location":"adapters/test","tags":[]},{"name":"github","version":"0.0.2","label":"Github","description":null,"location":"adapters/github","tags":[]}]}
+{"name":"Test Kendraio Adapter Repository","adapters":[{"name":"github","version":"0.0.2","label":"Github","description":null,"location":"adapters/github","tags":[]}]}

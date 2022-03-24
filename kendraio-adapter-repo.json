@@ -1,7 +1,6 @@
 {
   "name": "Test Kendraio Adapter Repository",
   "adapters": [
-    "adapters/test",
     "adapters/github"
   ]
 }
