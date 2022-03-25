@@ -1,4 +1,5 @@
-import { promises as fs, createWriteStream, readFileSync, readdirSync, writeFileSync } from 'fs';
+import { promises as fs, createWriteStream, readFileSync, readdirSync, writeFileSync} from 'fs';
+import { statSync, existsSync } from 'fs';
 import * as rimraf from "rimraf";
 import { promisify } from "util";
 
@@ -7,32 +8,48 @@ import { get, set, pick, flatten } from "lodash";
 import * as archiver from 'archiver';
 import { compile } from 'handlebars';
 
-async function getRepoAdapterList() {
+
+
+async function getRepoAdapterList(dir: string) {
+  const content = await fs.readdir(`${dir}/adapters`);
+// find all diectories in array
+  const dirs = content.filter(f => statSync(`${ dir }/adapters/${ f }`).isDirectory());
+  
+  //  loop through all directories, to see if they contain a kendraio-adapter.json file
+  const adapters = await Promise.all(dirs.map(async (location) => {
+    // check if the directory contains a kendraio-adapter.json file
+    const adapter = `${ dir }/adapters/${ location }/kendraio-adapter.json`;
+    if (existsSync(adapter)) {
+      // read the file
+      const data = await fs.readFile(adapter, 'utf-8');
+      // parse the file
+      const { name, version, label, description, tags } = JSON.parse(data);
+      return {
+        name, version, label, description, location, tags
+     }
+    }
+  }));
+  return adapters;
+}
+
+async function getRepoSettings() {
   const file = await fs.readFile(`${ __dirname }/kendraio-adapter-repo.json`, 'utf-8');
   return JSON.parse(file);
 }
 
-async function getAdapterInfo(location: string): Promise<any> {
-  const data = await fs.readFile(`${ location }/kendraio-adapter.json`, 'utf-8');
-  const { name, version, label, description, tags } = JSON.parse(data);
-  return {
-    name, version, label, description, location, tags
-  }
-}
 
 async function run() {
   // Remove previous build
   await rmdir('public');
-
-  const index = await getRepoAdapterList();
-  console.log(index);
-
   // Get main adapter info for the index
-  const adapterList = await Promise.all(get(index, 'adapters', [])
-    .map(location => getAdapterInfo(location)));
-
-  // Write the resulting Adapter Repository index file
-  set(index, 'adapters', adapterList);
+  const adapterList = await getRepoAdapterList(__dirname);
+  const settings = await getRepoSettings();
+  const index = {
+    name: settings.name,
+    description: settings.description,
+    adapters: adapterList
+  }
+  console.log(index);
   await fs.mkdir('public');
   await fs.writeFile('public/index.json', JSON.stringify(index));
 
@@ -46,6 +63,7 @@ async function run() {
 <body>
 <div class="container" style="padding: 1em;">
 <h1>{{name}}</h1>
+<p>{{description}}</p>
 <table class="pure-table pure-table-striped">
     <thead>
         <tr>
@@ -67,7 +85,6 @@ async function run() {
             <td>{{version}}</td>
             <td>{{ tags }}</td>
             <td>
-                <a class="pure-button" style="margin-bottom: 0.5em;" href="{{ name }}.zip">Download (Zip)</a><br>
                 <a class="pure-button" href="{{ name }}.json">Download (JSON)</a>
             </td>
         </tr>
@@ -81,18 +98,8 @@ async function run() {
   const template = compile(indexTemplate);
   await fs.writeFile('public/index.html', template({ ...index }));
 
-  // Compile and add the adapter configurations
-  // TODO: Validation and verification of adapter configs
   adapterList.forEach(({ location, name }) => {
-    const output = createWriteStream(`${ __dirname }/public/${ name }.zip`);
-    const archive = archiver('zip');
-    archive.pipe(output);
-    archive.directory(location, false);
-    archive.finalize();
-  });
-
-  adapterList.forEach(({ location, name }) => {
-    let data = readFileSync(`${ location }/kendraio-adapter.json`, 'utf-8');
+    let data = readFileSync(`adapters/${ location }/kendraio-adapter.json`, 'utf-8');
     let attachments = get(JSON.parse(data), 'attachments', []);      
     writeFileSync(`${ __dirname }/public/${name}.json`, JSON.stringify({ ...JSON.parse(data), attachments }, null, 2));
   });

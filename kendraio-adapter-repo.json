@@ -1,6 +1,4 @@
 {
-  "name": "Test Kendraio Adapter Repository",
-  "adapters": [
-    "adapters/github"
-  ]
+  "name": "Pete's dev Kendraio Adapter Repository",
+  "description": "Development versions of the Kendraio Adapters"
 }

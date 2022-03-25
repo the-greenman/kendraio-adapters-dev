@@ -1,1 +1,1 @@
-{"name":"Test Kendraio Adapter Repository","adapters":[{"name":"github","version":"0.0.3","label":"Github","description":"Github adapter for adapter development","location":"adapters/github","tags":[]}]}
+{"name":"Pete's dev Kendraio Adapter Repository","description":"Development versions of the Kendraio Adapters","adapters":[{"name":"github","version":"0.0.3","label":"Github","description":"Github adapter for adapter development","location":"github","tags":[]}]}
