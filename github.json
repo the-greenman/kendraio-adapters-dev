@@ -27,7 +27,7 @@
     {
       "adapterName": "github",
       "workflowId": "githubUser",
-      "title": "Github Authentication",
+      "title": "Github User Data",
       "modified": true,
       "config": "configs/githubUser.json"
     },
@@ -69,7 +69,7 @@
   ],
   "database": [],
   "forms": [],
-  "commitMessage": "Added intro",
+  "commitMessage": "Beginnings of wizard",
   "attachments": {
     "configs/myWorkflow.json": {
       "workflowId": "myWorkflow",
@@ -123,7 +123,7 @@
     },
     "configs/githubUser.json": {
       "workflowId": "githubUser",
-      "title": "Github Authentication",
+      "title": "Github User Data",
       "adapterName": "github",
       "blocks": [
         {
@@ -162,7 +162,7 @@
           "blockComment": "Request auth if no data exists"
         }
       ],
-      "modified": false
+      "modified": true
     },
     "configs/githubRepoIssues.json": {
       "workflowId": "githubRepoIssues",
@@ -320,7 +320,7 @@
         },
         {
           "type": "mapping",
-          "mapping": "{\r\n    owner:`the-greenman`,\r\n    repository:`kendraio-test`,\r\n    branch:`main`\r\n}",
+          "mapping": "{\r\n    owner:`the-greenman`,\r\n    repository:`kendraio-adapters-dev`,\r\n    branch:`main`\r\n}",
           "blockComment": "Set up repository data"
         },
         {
@@ -379,6 +379,11 @@
           "blockComment": "Adapter commit data"
         },
         {
+          "type": "template",
+          "template": "<h3>Workflows</h3><ul>{{#each data.workflow}}<li>{{workflowId}}: {{title}}</li>{{/each}}</ul>",
+          "blockComment": "Workflow list"
+        },
+        {
           "type": "form",
           "jsonSchema": {
             "type": "object",
@@ -409,19 +414,22 @@
           "blockComment": ""
         },
         {
-          "type": "template",
-          "template": "<h3>Workflows</h3><ul>{{#each data.workflow}}<li>{{workflowId}}: {{title}}</li>{{/each}}</ul>",
-          "blockComment": "Workflow list"
-        },
-        {
           "type": "context-save",
           "key": "adapter",
           "blockComment": "Save to context.adapter"
         },
         {
           "type": "mapping",
-          "mapping": "btoa(json(data))",
+          "mapping": "base64encode(json(data))",
           "blockComment": "base64 encode"
+        },
+        {
+          "type": "debug",
+          "open": 1,
+          "showData": true,
+          "showContext": false,
+          "showState": true,
+          "blockComment": ""
         },
         {
           "type": "context-save",
@@ -432,14 +440,6 @@
           "type": "mapping",
           "mapping": "{\r\n  \"input\": {\r\n    \"branch\": {\r\n      \"repositoryNameWithOwner\": join(`/`,[context.github.adapterCommit.owner,context.github.adapterCommit.repository]),\r\n      \"branchName\": context.github.adapterCommit.branch\r\n    },\r\n    \"message\": {\r\n      \"headline\": context.adapter.commitMessage\r\n    },\r\n    \"fileChanges\": {\r\n      \"additions\": [\r\n        {\r\n          \"path\": join(`/`,[`adapters`,context.adapter.adapterName,`kendraio-adapter.json`]),\r\n          \"contents\": context.content\r\n        }\r\n      ]\r\n    },\r\n    \"expectedHeadOid\": context.github.lastCommit.oid\r\n  }\r\n}",
           "blockComment": "Set up input data"
-        },
-        {
-          "type": "debug",
-          "open": 1,
-          "showData": true,
-          "showContext": false,
-          "showState": true,
-          "blockComment": ""
         },
         {
           "type": "actions",
@@ -478,7 +478,7 @@
           "blockComment": ""
         }
       ],
-      "modified": false
+      "modified": true
     },
     "configs/loadGithubUserData.json": {
       "workflowId": "loadGithubUserData",
@@ -503,6 +503,7 @@
           "showData": true,
           "showContext": false,
           "showState": true,
+          "enabledGetter": "state.flags.devel",
           "blockComment": ""
         },
         {
@@ -526,7 +527,7 @@
           "blockComment": ""
         }
       ],
-      "modified": false
+      "modified": true
     },
     "configs/introduction.json": {
       "workflowId": "introduction",
@@ -546,7 +547,7 @@
         {
           "type": "gosub",
           "adapterName": "github",
-          "workflowId": "githubAuth",
+          "workflowId": "githubUser",
           "blockComment": "Add personal access token form"
         }
       ],
